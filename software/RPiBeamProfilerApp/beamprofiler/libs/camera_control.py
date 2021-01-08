@@ -59,7 +59,7 @@ class MyCamera(picamera.PiCamera):
 			# detect minimum shutter speed
 			self.min_shutter_speed = 9 # microseconds
 		
-		print 'Detected camera version: ', self.version
+		print('Detected camera version: ', self.version)
 		
 		self.Hpixels = self.MAX_RESOLUTION[0]
 		self.Vpixels = self.MAX_RESOLUTION[1]
@@ -104,7 +104,7 @@ class MyCamera(picamera.PiCamera):
 		((ry, rx), (gy, gx), (Gy, Gx), (by, bx)) = BayerArray.BAYER_OFFSETS[BayerArray._header.bayer_order]
 		
 		et1 = time.time() - st
-		print 'elapsed time (capture):',et1
+		print('elapsed time (capture):',et1)
 		
 		if self.interpolate:
 			## Use full resolution by interpolating the bayer data back to the full sensor resolution
@@ -112,7 +112,7 @@ class MyCamera(picamera.PiCamera):
 			## demosaic - postprocess ccd data back to full resolution rgb array
 			self.background = BayerArray.demosaic()
 			et2 = time.time() - st
-			print 'elapsed time (demosaic):',et2
+			print('elapsed time (demosaic):',et2)
 		
 			##red pixels only:
 			self.background = np.asarray(self.background[:, :, 0],dtype=int)
@@ -122,7 +122,7 @@ class MyCamera(picamera.PiCamera):
 			
 			## red pixels only:
 			if self.col=='Red':
-				print BayerArray.array
+				print(BayerArray.array)
 				self.background = np.asarray(BayerArray.array[ry::2, rx::2, 0],dtype=int)
 			
 			elif self.col=='Green':
@@ -153,7 +153,7 @@ class MyCamera(picamera.PiCamera):
 		((ry, rx), (gy, gx), (Gy, Gx), (by, bx)) = BayerArray.BAYER_OFFSETS[BayerArray._header.bayer_order]
 		
 		et1 = time.time() - st
-		print 'elapsed time (capture):',et1
+		print('elapsed time (capture):',et1)
 		
 		#print BayerArray.array.shape
 		#self.image = BayerArray.array ## full BGGR bayer mosaic array
@@ -164,7 +164,7 @@ class MyCamera(picamera.PiCamera):
 			##demosaic - postprocess ccd data back to full resolution rgb array
 			self.image = np.asarray(BayerArray.demosaic(),dtype=int)
 			et2 = time.time() - st
-			print 'elapsed time (demosaic):',et2
+			print('elapsed time (demosaic):',et2)
 		
 			##red pixel values:
 			self.image = self.image[:, :, 0]
@@ -174,7 +174,7 @@ class MyCamera(picamera.PiCamera):
 			# red pixels:
 			## red pixels only:
 			if self.col=='Red':
-				print BayerArray.array
+				print(BayerArray.array)
 				self.image = np.asarray(BayerArray.array[ry::2, rx::2, 0],dtype=int)
 			
 			elif self.col=='Green':
@@ -198,7 +198,7 @@ class MyCamera(picamera.PiCamera):
 		# remove dark frame
 		if self.bg_subtract:
 			if self.background is None:
-				print '\t !! WARNING :: No dark frame image to subtract '
+				print('\t !! WARNING :: No dark frame image to subtract ')
 			else:
 				self.image = self.image - self.background
 				self.cropped_image = self.cropped_image - cropped_bg
@@ -216,7 +216,7 @@ class MyCamera(picamera.PiCamera):
 		self.Ys = np.linspace(self.roi[3],self.roi[2],ch)
 		
 		et2 = time.time() - st
-		print 'elapsed time (capture + processing):',et1
+		print('elapsed time (capture + processing):',et1)
 	
 	def set_background(self):
 		""" Use whatever the current image is as the dark frame image """
@@ -241,7 +241,7 @@ class MyCamera(picamera.PiCamera):
 		Custom auto-exposure routine that finds the maximum pixel value and makes sure it's below saturation 
 		"""
 		
-		print 'Running auto-exposure:'
+		print('Running auto-exposure:')
 		
 		#define 'good' range for maximum pixel value, arbitrary
 		desired_range = (800,950)
@@ -251,7 +251,7 @@ class MyCamera(picamera.PiCamera):
 		while finding_shutter_speed:
 			## need to add detection of min/max shutter speeds here !!
 				
-			print '.',
+			print('.', end=' ')
 			#print self.analog_gain, self.digital_gain
 			current_max = self.get_image_fast_max()
 			#print 'Image max value:',current_max
@@ -260,27 +260,27 @@ class MyCamera(picamera.PiCamera):
 			elif current_max>desired_range[1]:
 				# reduce exposure time
 				if self.shutter_speed == self.min_shutter_speed:
-					print '\n\n','-'*50,'SHUTTER SPEED AT MINIMUM - REDUCE OPTICAL POWER','-'*50
+					print('\n\n','-'*50,'SHUTTER SPEED AT MINIMUM - REDUCE OPTICAL POWER','-'*50)
 					finding_shutter_speed = False
 
 				self.shutter_speed = int(0.5 * self.shutter_speed * desired_range[0] / current_max)
-				print 'New shutter speed:', self.shutter_speed
+				print('New shutter speed:', self.shutter_speed)
 			elif current_max == 0:
 				self.shutter_speed = int(100 * self.shutter_speed)
 			else:
 				# increase exposure time
 				self.old_shutter_speed = self.shutter_speed
-				print 'Old shutter speed', self.old_shutter_speed
+				print('Old shutter speed', self.old_shutter_speed)
 				self.shutter_speed = int(self.shutter_speed * desired_range[0] / current_max * 1.1)
 				if self.shutter_speed == self.old_shutter_speed:
 					# catch increments that are too small
-					print 'Estimated increment too small...'
+					print('Estimated increment too small...')
 					self.shutter_speed = self.shutter_speed + 19
-				print 'New shutter speed', self.shutter_speed
+				print('New shutter speed', self.shutter_speed)
 					
-		print ' Done'
-		print ' Shutter speed:',
-		print int(self.shutter_speed * 2.2)
+		print(' Done')
+		print(' Shutter speed:', end=' ')
+		print(int(self.shutter_speed * 2.2))
 		return int(self.shutter_speed * 2.2)
 			
 	def get_image_fast_max(self):
@@ -295,6 +295,6 @@ class MyCamera(picamera.PiCamera):
 		with camarray.PiRGBArray(self) as stream:
 			self.capture(stream,'rgb')
 			image = stream.array
-		print 'Elapsed time (get_image_fast):', time.time() - st
-		print '\tImage maximum value:',image[:,:,0].max()*4
+		print('Elapsed time (get_image_fast):', time.time() - st)
+		print('\tImage maximum value:',image[:,:,0].max()*4)
 		return image[:,:,0].max()*4
