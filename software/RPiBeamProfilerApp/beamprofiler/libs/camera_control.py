@@ -14,8 +14,8 @@
 
 import numpy as np 
 import time
-import wx
-
+# import wx
+import matplotlib.pyplot as plt
 #camera
 import picamera
 import picamera.array as camarray
@@ -216,7 +216,8 @@ class MyCamera(picamera.PiCamera):
 		self.Ys = np.linspace(self.roi[3],self.roi[2],ch)
 		
 		et2 = time.time() - st
-		print('elapsed time (capture + processing):',et1)
+		print('elapsed time (capture + processing):',et2)
+		self.et2 = et2
 	
 	def set_background(self):
 		""" Use whatever the current image is as the dark frame image """
@@ -271,11 +272,13 @@ class MyCamera(picamera.PiCamera):
 				# increase exposure time
 				self.old_shutter_speed = self.shutter_speed
 				print('Old shutter speed', self.old_shutter_speed)
-				self.shutter_speed = int(self.shutter_speed * desired_range[0] / current_max * 1.1)
+				self.shutter_speed = int(self.shutter_speed * desired_range[0] / current_max * 1.3)
 				if self.shutter_speed == self.old_shutter_speed:
 					# catch increments that are too small
-					print('Estimated increment too small...')
 					self.shutter_speed = self.shutter_speed + 19
+					print('Estimated increment too small...')
+					print("current shutter speed", self.shutter_speed)
+					
 				print('New shutter speed', self.shutter_speed)
 					
 		print(' Done')
@@ -298,3 +301,12 @@ class MyCamera(picamera.PiCamera):
 		print('Elapsed time (get_image_fast):', time.time() - st)
 		print('\tImage maximum value:',image[:,:,0].max()*4)
 		return image[:,:,0].max()*4
+
+if __name__=="__main__":
+    cam = MyCamera(speed = 30,ExpMode = 'none')
+    cam.autoexpose()
+    #times = []
+    image = cam.get_image()
+    plt.matshow(image)
+    cam.cleanup()
+    plt.show()
